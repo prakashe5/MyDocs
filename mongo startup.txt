@@ -1,0 +1,191 @@
+32 bit machine
+mongod --port 27017 --storageEngine=mmapv1 --dbpath path
+
+
+
+Go to
+C:\Program Files\MongoDB 2.6 Standard\bin
+
+
+
+
+
+mongod --dbpath F:\NIIT_Mongodb --port 27017
+
+
+replica set
+
+mongod --port "PORT" --dbpath "YOUR_DB_DATA_PATH" --replSet "REPLICA_SET_INSTANCE_NAME"
+mongod --port 27017 --dbpath "D:\set up\mongodb\data" --replSet rs0
+
+to check replica set 
+
+rs.initiate()
+rs.config()
+rs.status()
+db.isMaster()
+replica on multiple machines
+rs.add("ipaddress:27017")
+
+>help
+To check current db
+db>
+db.stats()
+
+to drop database
+db.dropDatabase()
+
+post = {"title" : "My Blog Post",
+... "content" : "Here's my blog post.",
+... "date" : new Date()}
+db.blog.insert(post)
+
+db.post.insert([
+ 
+{
+title: 'MongoDB Introduction',
+portrayal: 'MongoDB is no sql database',
+by: ' j2eebrain ',
+url: 'http://www.j2eebrain.com',
+labels: ['MongoDB', 'database', 'Nosql'],
+likes: 100
+},
+ 
+{
+title: 'Nosql Database',
+depiction: 'Nosql database doesn't have tables',
+by: 'j2eebrain',
+url: 'http://www.j2eebrain.com',
+labels: ['MongoDB', 'database', 'Nosql'],
+likes: 20,
+ 
+remarks: [
+{
+user:'user1',
+message: 'My first education',
+datecreated: new Date(2014,12,11,3,33),
+like: 0
+}
+]
+}
+])
+
+
+
+
+
+
+
+
+
+
+
+
+db.blog.update({'course':'java'},{$set:{'course':'android'}})  
+db.blog.remove({title : "My Blog Post"})
+
+db.blog.drop() 
+
+
+To start mongodb, type mongo
+
+-----------------
+show dbs
+
+---------------
+show collections
+-------------------
+Movie ---Db
+db.movies.find();
+
+> use newdb;
+switched to db newdb
+>expenditure={Rent:5000,Transport:3000,Dress:3000,Recharge:1500,
+Food:6000,Misc:4000,PlannedDate:new Date('02/26/2015')};
+>db.homebudgetdb.insert(expenditure);
+>db.homebudgetdb.find();
+
+> book = { author: 'Jamie Munro', title: '20 Recipes for Programming PhoneGap',
+published: new Date('04/03/2012') };
+{
+"author" : "Jamie Munro",
+"title" : "20 Recipes for Programming PhoneGap",
+"published" : ISODate("2012-04-03T07:00:00Z")
+}
+> db.books.insert(book);
+> db.books.find();
+{ "_id" : ObjectId("5063d1d89e302eaf24b259a0"), "author" : "Jamie Munro",
+"title" : "20 Recipes for Programming PhoneGap",
+"published" : ISODate("2012-04-03T07:00:00Z") }
+
+
+book = { title: '50 Tips and Tricks for MongoDB Developers',
+author: 'Kristina Chodorow',
+published: new Date('05/06/2011'),
+keywords: ['design', 'implementation',
+'optimization'] };
+
+db.books.update( { author: "Kristina Chodorow" },
+{ "$push": { "keywords": "developer" } } );
+
+db.books.find({}, {title:1, _id:0});
+
+-----------------------------------------------
+
+db.createCollection(<name>, { capped: <boolean>,
+                              autoIndexId: <boolean>,
+                              size: <number>,
+                              max: <number>,
+                              storageEngine: <document>,
+                              validator: <document>,
+                              validationLevel: <string>,
+                              validationAction: <string>,
+                              indexOptionDefaults: <document>,
+                              viewOn: <string>,
+                              pipeline: <pipeline>,
+                              collation: <document> } )
+
+
+db.createCollection("log", { capped : true, size : 5242880, max : 5000 } )
+This command creates a collection named log with a maximum size of 5 megabytes and a maximum of 5000 documents.
+
+db.createCollection( "contacts",
+   {
+      validator: { $or:
+         [
+            { phone: { $type: "string" } },
+            { email: { $regex: /@mongodb\.com$/ } },
+            { status: { $in: [ "Unknown", "Incomplete" ] } }
+         ]
+      }
+   }
+
+It will return error
+db.contacts.insert( { name: "Amanda", status: "Updated" } )
+
+collation
+db.createCollection( "myColl", { collation: { locale: "fr" } } );
+
+Specify Storage Engine Options
+db.createCollection(
+   "users",
+   { storageEngine: { wiredTiger: { configString: "<option>=<setting>" } } }
+)
+
+db.createCollection( "contacts", { validator: 
+  { $and: 
+      [ 
+          { phone: { $type: "string" } }, 
+          { email: { $regex: /@mongodb\.com$/ } }, 
+          { status: { $in: [ "Unknown", "Incomplete" ] } }
+      ]
+   },
+   validationLevel : "strict",
+   validationAction : "error"
+  } 
+) 
+
+ db.test.insert({date: ISODate()})
+ db.test.insert({date: new Date()})
+var myDate = new Date(2014, 11, 12, 14, 12);
+db.collection.insert({ "date": myDate });
