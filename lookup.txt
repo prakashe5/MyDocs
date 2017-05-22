@@ -1,0 +1,12 @@
+db.address.aggregate([
+    {
+      $lookup:
+        {
+          from: "customer",
+          localField: "_id",
+          foreignField: "addressRef",
+          as: "out_doc"
+        }
+   }
+])
+
