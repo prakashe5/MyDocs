@@ -172,7 +172,7 @@ db.createCollection(
    { storageEngine: { wiredTiger: { configString: "<option>=<setting>" } } }
 )
 
-db.createCollection( "contacts", { validator: 
+db.createCollection( "contacts", { capped : true, size : 5242880, max : 5000, validator: 
   { $and: 
       [ 
           { phone: { $type: "string" } }, 
@@ -189,3 +189,263 @@ db.createCollection( "contacts", { validator:
  db.test.insert({date: new Date()})
 var myDate = new Date(2014, 11, 12, 14, 12);
 db.collection.insert({ "date": myDate });
+
+1.create customer collection
+2.create address collection
+3.insert address data
+4. insert customer data with address ref  
+
+
+> var schematodo = db.tasks.findOne();
+> for (var key in schematodo) { print (key) ; }
+
+
+
+
+> db.foo.find()
+> db.foo.insert({"name":"abdul"})
+> db.foo.find()
+{ "_id" : ObjectId("4e93037bbf6f1dd3a0a9541a"), "name" : "abdul" }
+> item = db.foo.findOne()
+{ "_id" : ObjectId("4e93037bbf6f1dd3a0a9541a"), "name" : "abdul" }
+> db.foo.update({"_id" :ObjectId("4e93037bbf6f1dd3a0a9541a") },{$set : {"new_field":1}})
+> db.foo.find()
+{ "_id" : ObjectId("4e93037bbf6f1dd3a0a9541a"), "new_field" : 1, "name" : "abdul" }
+
+-------------------------------------------------------------
+With two collections
+
+db.address.aggregate([
+    {
+      $lookup:
+        {
+          from: "customer",
+          localField: "_id",
+          foreignField: "addressRef",
+          as: "out_doc"
+        }
+   }
+])
+===============================================
+With Three collections
+
+db.customer.aggregate(  [{
+        $lookup: {
+           from: "address",
+           localField: "addressRef",
+           foreignField: "_id",
+           as: "addressInfo"
+        }
+    },
+
+    {
+        $unwind: "$addressInfo"
+    },
+    {
+        $lookup: {
+           from: "branch",
+           localField: "branchRef",
+           foreignField: "_id",
+           as: "branchInfo"
+        }
+    }
+    ,
+
+    {
+        $unwind: "$branchInfo"
+    }
+    
+    ])
+------------------------------------------------
+ aggrgate with Projection
+db.customer.aggregate( [ { $project : { name : 1 , password : 1 } } ] )
+-----------------------------------------------------------
+
+-- 1 to include
+
+db.address.aggregate([
+    {
+      $lookup:
+        {
+          from: "customer",
+          localField: "_id",
+          foreignField: "addressRef",
+          as: "out_doc"
+        }
+   },
+	{ $project : { doorNo : 1 , streetName : 1 } }
+
+])
+-----------------------------------------------------------
+lookup with project
+
+db.address.aggregate([
+    {
+      $lookup:
+        {
+          from: "customer",
+          localField: "_id",
+          foreignField: "addressRef",
+          as: "out_doc"
+        }
+   },
+	{ $project : { doorNo : 1 , streetName : 1 , name:"$out_doc.name"} }
+
+])
+------------------------------------------------------------
+
+db.customer.aggregate(  [{
+        $lookup: {
+           from: "address",
+           localField: "addressRef",
+           foreignField: "_id",
+           as: "addressInfo"
+        }
+    },
+    {
+        $lookup: {
+           from: "branch",
+           localField: "branchRef",
+           foreignField: "_id",
+           as: "branchInfo"
+        }
+    }
+    ,
+
+    {
+         $project: {name:"$addressInfo.streetName",address:"$branchInfo.address"}
+    }
+    
+    ])
+
+------------------------------------------------------------
+db.createCollection( "account", { capped : false, size : 5242880, max : 5000, validator: 
+  { $and: 
+      [ 
+          { actNo: { $type: "number" } }, 
+          { type: { $in: [ "savings", "recurring" ] } }, 
+          { balance: { $type: "number" } }
+      ]
+   },
+   validationLevel : "strict",
+   validationAction : "error"
+  } 
+) 
+--------------------------------------
+db.createCollection( "transaction", { capped : false, size : 5242880, max : 5000, validator: 
+  { $and: 
+      [ 
+          { tranId: { $type: "number" } }, 
+          { dot: { $type: "date" } }, 
+          { amt: { $type: "number" }},
+         {tranType:{$type:"string"}} 
+      ]
+   },
+   validationLevel : "strict",
+   validationAction : "error"
+  } 
+) 
+--------------------------------------------------------
+db.transaction.insert({
+    tranId:776645,
+    dot: ISODate("2017-04-03T07:00:00Z"),
+    amt:7000,
+    tranType:"recurring"
+    
+})
+-----------------------------------------------
+var actObj=db.account.findOne({$project:{_id})
+print (actObj);
+
+db.transaction.insert({
+    tranId:773345,
+    dot: ISODate("2016-07-07T07:00:00Z"),
+    amt:7500,
+    tranType:"savings",
+    accountRef:actObj
+    
+})
+
+____________________________________________________
+Group By date
+
+db.transaction.aggregate(
+   [
+      {
+        $group : {
+           _id : { month: { $month: "$dot" }, day: { $dayOfMonth: "$dot" }, year: { $year: "$dot" } },
+           totalPrice: { $sum: "$amt" },
+           averageTransaction: { $avg: "$amt" },
+           count: { $sum: 1 }
+        }
+      }
+   ]
+)
+----------------------------------------------
+Group By transaction type
+
+db.transaction.aggregate(
+   [
+      {
+        $group : {
+           _id :"$tranType",
+           totalPrice: { $sum: "$amt" },
+           averageTransaction: { $avg: "$amt" },
+           count: { $sum: 1 }
+        }
+      }
+   ]
+)
+----------------------------------
+db.transaction.aggregate(
+   [
+      {
+        $group : {
+           _id :"$tranType",
+           totalPrice: { $sum: "$amt" },
+           averageTransaction: { $avg: "$amt" },
+           bonus:{$sum: { $multiply: [ "$amt", 0.1 ] }},  
+
+           count: { $sum: 1 }
+        }
+      }
+   ]
+)
+------------------------------------------------
+Retrieve Distinct Values
+
+db.transaction.aggregate( [ { $group : { _id : "$amt" } } ] )
+------------------------------------------------------------
+Randomly selecting number of records
+
+db.transaction.aggregate(
+   [ { $sample: { size: 2 } } ]
+)
+----------------------------------------------------
+Sorting
+db.transaction.aggregate(
+   [
+     { $sort : { amt : -1, dot: 1 } }
+   ]
+)
+---------------------------------------
+index
+db.transaction.createIndex( { dot: 1, tranType: 1 } )
+-----------------------------------------------------------
+Map and Reduce
+
+var mapFunction1 = function() {
+                       emit(this.tranType, this.amt);
+                   };
+var reduceFunction1 = function(keyTranType, valuesAmt) {
+                          return Array.sum(valuesAmt);
+                      };
+                      
+db.transaction.mapReduce(
+                     mapFunction1,
+                     reduceFunction1,
+                     { out: "map_reduce_example" }
+                   ).find()
+-------------------------------------------------------------------
+db.getCollection('account').find({},actNo:true,balance:true})
+--------------------------------------------------------------
