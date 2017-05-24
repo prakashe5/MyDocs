@@ -6,3 +6,5 @@ http://jsonplaceholder.typicode.com/posts
 https://www.mongodb.com/dr/fastdl.mongodb.org/win32/mongodb-win32-x86_64-2008plus-ssl-3.4.4-signed.msi/download
 https://github.com/eswaribala/cgi_mongodb/blob/master/mongoadmin.txt
 https://www.mongodb.com/cloud/atlas
+  uid: prakashe5@yahoo.com
+	pwd: pramki1#
